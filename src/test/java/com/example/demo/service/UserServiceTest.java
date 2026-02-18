@@ -9,6 +9,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.example.demo.domain.User;
@@ -41,27 +45,31 @@ public class UserServiceTest {
         UserResponseBody response1 = new UserResponseBody(user1.getId(), user1.getName(), user1.getEmail());
         UserResponseBody response2 = new UserResponseBody(user2.getId(), user2.getName(), user2.getEmail());
 
-        Mockito.when(userRepository.findAll()).thenReturn(List.of(user1, user2));
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<User> page = new PageImpl<>(List.of(user1, user2), pageable, 2);
+
+        Mockito.when(userRepository.findAll(pageable)).thenReturn(page);
         Mockito.when(userMapper.toUserResponseBody(user1)).thenReturn(response1);
         Mockito.when(userMapper.toUserResponseBody(user2)).thenReturn(response2);
 
-        var result = userService.list();
+        var result = userService.list(pageable);
 
         Assertions.assertNotNull(result);
-        Assertions.assertInstanceOf(List.class, result);
-        Assertions.assertEquals(2, result.size());
-        Assertions.assertEquals(response1, result.get(0));
-        Assertions.assertEquals(response2, result.get(1));
+        Assertions.assertInstanceOf(Page.class, result);
+        Assertions.assertEquals(2, result.getTotalElements());
+        Assertions.assertTrue(result.getContent().contains(response1));
+        Assertions.assertTrue(result.getContent().contains(response2));
     }
 
     @Test
     void shouldReturnEmptyListWhenNoUsers() {
-        Mockito.when(userRepository.findAll()).thenReturn(List.of());
+        Pageable pageable = PageRequest.of(0, 10);
+        Mockito.when(userRepository.findAll(pageable)).thenReturn(Page.empty());
 
-        var result = userService.list();
+        var result = userService.list(pageable);
 
         Assertions.assertNotNull(result);
-        Assertions.assertInstanceOf(List.class, result);
+        Assertions.assertInstanceOf(Page.class, result);
         Assertions.assertTrue(result.isEmpty());
     }
 

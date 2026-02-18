@@ -2,6 +2,8 @@ package com.example.demo.service;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -23,10 +25,8 @@ public class UserService {
     private final UserMapper userMapper;
     private final TodoMapper todoMapper;
 
-    public List<UserResponseBody> list() {
-        return userRepository.findAll().stream()
-                .map(userMapper::toUserResponseBody)
-                .toList();
+    public Page<UserResponseBody> list(Pageable pageable) {
+        return userRepository.findAll(pageable).map(userMapper::toUserResponseBody);
     }
 
     public UserResponseBody find(Long id) {

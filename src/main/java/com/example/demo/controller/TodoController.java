@@ -1,7 +1,7 @@
 package com.example.demo.controller;
 
-import java.util.List;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,8 +28,8 @@ public class TodoController {
     private final TodoService todoServices;
 
     @GetMapping
-    public ResponseEntity<List<TodoResponseBody>> getAll() {
-        return ResponseEntity.ok(todoServices.list());
+    public ResponseEntity<Page<TodoResponseBody>> getAll(Pageable pageable) {
+        return ResponseEntity.ok(todoServices.list(pageable));
     }
 
     @GetMapping("/{id}")

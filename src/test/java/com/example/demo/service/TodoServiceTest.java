@@ -10,6 +10,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.example.demo.domain.Todo;
@@ -45,6 +49,7 @@ public class TodoServiceTest {
         User user = new User("William Lemos", "will21@email.com", "1234");
         Todo todo1 = new Todo("Change Password", "Change runescape password due the yesterday problem!", user);
         Todo todo2 = new Todo("Buy Groceries", "Buy milk, eggs, and bread for the week.", user);
+
         TodoResponseBody response1 = new TodoResponseBody(todo1.getId(), todo1.getTitle(), todo1.getDescription(),
                 TodoStage.NOT_STARTED.toString(),
                 user.getId());
@@ -52,28 +57,33 @@ public class TodoServiceTest {
                 TodoStage.NOT_STARTED.toString(),
                 user.getId());
 
-        Mockito.when(todoRepository.findAll()).thenReturn(List.of(todo1, todo2));
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Todo> page = new PageImpl<>(List.of(todo1, todo2), pageable, 2);
+
+        Mockito.when(todoRepository.findAll(pageable)).thenReturn(page);
         Mockito.when(todoMapper.toTodoResponseBody(todo1)).thenReturn(response1);
         Mockito.when(todoMapper.toTodoResponseBody(todo2)).thenReturn(response2);
 
-        var result = todoService.list();
+        var result = todoService.list(pageable);
 
         Assertions.assertNotNull(result);
-        Assertions.assertInstanceOf(List.class, result);
-        Assertions.assertEquals(2, result.size());
-        Assertions.assertEquals(response1, result.get(0));
-        Assertions.assertEquals(response2, result.get(1));
+        Assertions.assertInstanceOf(Page.class, result);
+        Assertions.assertEquals(2, result.getTotalElements());
+        Assertions.assertTrue(result.getContent().contains(response1));
+        Assertions.assertTrue(result.getContent().contains(response2));
     }
 
     @Test
     void shouldReturnEmptyListWhenNoTodos() {
-        Mockito.when(todoRepository.findAll()).thenReturn(List.of());
+        Pageable pageable = PageRequest.of(0, 10);
+        Mockito.when(todoRepository.findAll(pageable)).thenReturn(Page.empty());
 
-        var result = todoService.list();
+        var result = todoService.list(pageable);
 
         Assertions.assertNotNull(result);
-        Assertions.assertInstanceOf(List.class, result);
-        Assertions.assertTrue(result.isEmpty());
+        Assertions.assertInstanceOf(Page.class, result);
+        Assertions.assertEquals(0, result.getTotalElements());
+        Assertions.assertTrue(result.getContent().isEmpty());
     }
 
     @Test

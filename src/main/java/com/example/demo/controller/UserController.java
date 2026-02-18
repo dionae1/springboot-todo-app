@@ -2,6 +2,8 @@ package com.example.demo.controller;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,8 +31,8 @@ public class UserController {
     private final UserService userServices;
 
     @GetMapping()
-    public ResponseEntity<List<UserResponseBody>> getAllUsers() {
-        return ResponseEntity.ok(userServices.list());
+    public ResponseEntity<Page<UserResponseBody>> getAllUsers(Pageable pageable) {
+        return ResponseEntity.ok(userServices.list(pageable));
     }
 
     @GetMapping("/{id}")

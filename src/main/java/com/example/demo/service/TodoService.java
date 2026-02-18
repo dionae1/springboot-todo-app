@@ -1,7 +1,7 @@
 package com.example.demo.service;
 
-import java.util.List;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -24,10 +24,8 @@ public class TodoService {
     private final UserRepository userRepository;
     private final TodoMapper todoMapper;
 
-    public List<TodoResponseBody> list() {
-        return todoRepository.findAll().stream()
-                .map(todoMapper::toTodoResponseBody)
-                .toList();
+    public Page<TodoResponseBody> list(Pageable pageable) {
+        return todoRepository.findAll(pageable).map(todoMapper::toTodoResponseBody);
     }
 
     public TodoResponseBody find(Long id) {
