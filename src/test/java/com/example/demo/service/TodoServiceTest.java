@@ -4,12 +4,12 @@ import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -25,6 +25,7 @@ import com.example.demo.dto.TodoResponseBody;
 import com.example.demo.repository.TodoRepository;
 import com.example.demo.repository.UserRepository;
 
+@ExtendWith(MockitoExtension.class)
 public class TodoServiceTest {
 
     @Mock
@@ -39,23 +40,41 @@ public class TodoServiceTest {
     @InjectMocks
     private TodoService todoService;
 
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
+    private User createUser() {
+        return new User("William Lemos", "will21@email.com", "1234");
+    }
+
+    private Todo createTodo(User user) {
+        return new Todo("Change Password", "Change runescape password due the yesterday problem!", user);
+    }
+
+    private Todo createSecondaryTodo(User user) {
+        return new Todo("Buy Groceries", "Buy milk, eggs, and bread for the week.", user);
+    }
+
+    private TodoPostRequestBody createTodoPostRequestBody(User user) {
+        return new TodoPostRequestBody(user.getId(), "Change Password",
+                "Change runescape password due the yesterday problem!");
+    }
+
+    private TodoPutRequestBody createTodoPutRequestBody() {
+        return new TodoPutRequestBody("Change Password Updated",
+                "Change runescape password due the yesterday problem updated!", TodoStage.IN_PROGRESS);
+    }
+
+    private TodoResponseBody createTodoResponseBody(Todo todo) {
+        return new TodoResponseBody(todo.getId(), todo.getTitle(), todo.getDescription(),
+                todo.getStage().toString(), todo.getUser().getId());
     }
 
     @Test
     void shouldReturnAllTodos() {
-        User user = new User("William Lemos", "will21@email.com", "1234");
-        Todo todo1 = new Todo("Change Password", "Change runescape password due the yesterday problem!", user);
-        Todo todo2 = new Todo("Buy Groceries", "Buy milk, eggs, and bread for the week.", user);
+        User user = createUser();
+        Todo todo1 = createTodo(user);
+        Todo todo2 = createSecondaryTodo(user);
 
-        TodoResponseBody response1 = new TodoResponseBody(todo1.getId(), todo1.getTitle(), todo1.getDescription(),
-                TodoStage.NOT_STARTED.toString(),
-                user.getId());
-        TodoResponseBody response2 = new TodoResponseBody(todo2.getId(), todo2.getTitle(), todo2.getDescription(),
-                TodoStage.NOT_STARTED.toString(),
-                user.getId());
+        TodoResponseBody response1 = createTodoResponseBody(todo1);
+        TodoResponseBody response2 = createTodoResponseBody(todo2);
 
         Pageable pageable = PageRequest.of(0, 10);
         Page<Todo> page = new PageImpl<>(List.of(todo1, todo2), pageable, 2);
@@ -88,14 +107,10 @@ public class TodoServiceTest {
 
     @Test
     void shouldReturnSavedTodo() {
-        User user = new User("William Lemos", "will21@email.com", "1234");
-        Todo todo = new Todo("Change Password", "Change runescape password due the yesterday problem!", user);
-        TodoPostRequestBody todoRequest = new TodoPostRequestBody(user.getId(), "Change Password",
-                "Change runescape password due the yesterday problem!");
-
-        TodoResponseBody expectedResponse = new TodoResponseBody(todo.getId(), todo.getTitle(), todo.getDescription(),
-                todo.getStage().toString(),
-                user.getId());
+        User user = createUser();
+        Todo todo = createTodo(user);
+        TodoPostRequestBody todoRequest = createTodoPostRequestBody(user);
+        TodoResponseBody expectedResponse = createTodoResponseBody(todo);
 
         Mockito.when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
         Mockito.when(todoMapper.toTodo(todoRequest, user)).thenReturn(todo);
@@ -113,8 +128,7 @@ public class TodoServiceTest {
 
     @Test
     void shouldThrowExceptionWhenUserNotFoundOnSave() {
-        TodoPostRequestBody todoRequest = new TodoPostRequestBody(1L, "Change Password",
-                "Change runescape password due the yesterday problem!");
+        TodoPostRequestBody todoRequest = createTodoPostRequestBody(createUser());
 
         Mockito.when(userRepository.findById(todoRequest.userId())).thenReturn(Optional.empty());
 
@@ -123,11 +137,9 @@ public class TodoServiceTest {
 
     @Test
     void shouldReturnTodoById() {
-        User user = new User("William Lemos", "will21@email.com", "1234");
-        Todo todo = new Todo("Change Password", "Change runescape password due the yesterday problem!", user);
-        TodoResponseBody expectedResponse = new TodoResponseBody(todo.getId(), todo.getTitle(), todo.getDescription(),
-                todo.getStage().toString(),
-                user.getId());
+        User user = createUser();
+        Todo todo = createTodo(user);
+        TodoResponseBody expectedResponse = createTodoResponseBody(todo);
 
         Mockito.when(todoRepository.findById(todo.getId())).thenReturn(Optional.of(todo));
         Mockito.when(todoMapper.toTodoResponseBody(todo)).thenReturn(expectedResponse);
@@ -154,14 +166,10 @@ public class TodoServiceTest {
 
     @Test
     void shouldUpdateTodo() {
-        User user = new User("William Lemos", "will21@email.com", "1234");
-        user.setId(1L);
-        Todo todo = new Todo("Change Password", "Change runescape password due the yesterday problem!", user);
-        todo.setId(1L);
-        TodoPutRequestBody todoRequest = new TodoPutRequestBody("Change Password Updated",
-                "Change runescape password due the yesterday problem updated!", TodoStage.IN_PROGRESS);
-        TodoResponseBody expectedResponse = new TodoResponseBody(todo.getId(), todoRequest.title(),
-                todoRequest.description(), todoRequest.stage().toString(), user.getId());
+        User user = createUser();
+        Todo todo = createTodo(user);
+        TodoPutRequestBody todoRequest = createTodoPutRequestBody();
+        TodoResponseBody expectedResponse = createTodoResponseBody(todo);
 
         Mockito.when(todoRepository.findById(1L)).thenReturn(Optional.of(todo));
         Mockito.when(todoRepository.save(Mockito.any(Todo.class))).thenReturn(todo);
@@ -179,27 +187,17 @@ public class TodoServiceTest {
 
     @Test
     void shouldNotUpdateWhenTodoNotFound() {
-        User user = new User("William Lemos", "will21@email.com", "1234");
-        TodoPutRequestBody todoRequest = new TodoPutRequestBody("Change Password Updated",
-                "Change runescape password due the yesterday problem updated!", TodoStage.IN_PROGRESS);
-
-        Mockito.when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        TodoPutRequestBody todoRequest = createTodoPutRequestBody();
         Mockito.when(todoRepository.findById(1L)).thenReturn(Optional.empty());
-
         Assertions.assertThrows(ResponseStatusException.class, () -> todoService.update(1L, todoRequest));
     }
 
     @Test
     void shouldUpdateTodoStage() {
-        User user = new User("William Lemos", "will21@email.com", "1234");
-        user.setId(1L);
-        Todo todo = new Todo("Change Password", "Change runescape password due the yesterday problem!", user);
-        todo.setId(1L);
-
-        TodoPutRequestBody todoRequest = new TodoPutRequestBody(todo.getTitle(), todo.getDescription(),
-                TodoStage.IN_PROGRESS);
-        TodoResponseBody expectedResponse = new TodoResponseBody(todo.getId(), todo.getTitle(), todo.getDescription(),
-                TodoStage.IN_PROGRESS.toString(), user.getId());
+        User user = createUser();
+        Todo todo = createTodo(user);
+        TodoPutRequestBody todoRequest = createTodoPutRequestBody();
+        TodoResponseBody expectedResponse = createTodoResponseBody(todo);
 
         Mockito.when(todoRepository.findById(1L)).thenReturn(Optional.of(todo));
         Mockito.when(todoRepository.save(Mockito.any(Todo.class))).thenReturn(todo);
@@ -217,16 +215,13 @@ public class TodoServiceTest {
 
     @Test
     void shouldUpdateDescriptionToEmpty() {
-        User user = new User("William Lemos", "will21@email.com", "1234");
-        user.setId(1L);
-        Todo todo = new Todo("Change Password", "Change runescape password due the yesterday problem!", user);
-        todo.setId(1L);
+        User user = createUser();
+        Todo todo = createTodo(user);
         Todo updatedTodo = new Todo(todo.getTitle(), "", user);
         updatedTodo.setId(todo.getId());
 
-        TodoPutRequestBody todoRequest = new TodoPutRequestBody(todo.getTitle(), "", todo.getStage());
-        TodoResponseBody expectedResponse = new TodoResponseBody(todo.getId(), todo.getTitle(), "",
-                todo.getStage().toString(), user.getId());
+        TodoPutRequestBody todoRequest = createTodoPutRequestBody();
+        TodoResponseBody expectedResponse = createTodoResponseBody(updatedTodo);
 
         Mockito.when(todoRepository.findById(1L)).thenReturn(Optional.of(todo));
         Mockito.when(todoRepository.save(Mockito.any(Todo.class))).thenReturn(updatedTodo);
