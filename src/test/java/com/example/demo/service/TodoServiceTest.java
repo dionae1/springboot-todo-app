@@ -1,5 +1,8 @@
 package com.example.demo.service;
 
+import static com.example.demo.util.TodoCreator.*;
+import static com.example.demo.util.UserCreator.*;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -17,7 +20,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.example.demo.domain.Todo;
-import com.example.demo.domain.TodoStage;
 import com.example.demo.domain.User;
 import com.example.demo.dto.TodoPostRequestBody;
 import com.example.demo.dto.TodoPutRequestBody;
@@ -39,33 +41,6 @@ public class TodoServiceTest {
 
     @InjectMocks
     private TodoService todoService;
-
-    private User createUser() {
-        return new User("William Lemos", "will21@email.com", "1234");
-    }
-
-    private Todo createTodo(User user) {
-        return new Todo("Change Password", "Change runescape password due the yesterday problem!", user);
-    }
-
-    private Todo createSecondaryTodo(User user) {
-        return new Todo("Buy Groceries", "Buy milk, eggs, and bread for the week.", user);
-    }
-
-    private TodoPostRequestBody createTodoPostRequestBody(User user) {
-        return new TodoPostRequestBody(user.getId(), "Change Password",
-                "Change runescape password due the yesterday problem!");
-    }
-
-    private TodoPutRequestBody createTodoPutRequestBody() {
-        return new TodoPutRequestBody("Change Password Updated",
-                "Change runescape password due the yesterday problem updated!", TodoStage.IN_PROGRESS);
-    }
-
-    private TodoResponseBody createTodoResponseBody(Todo todo) {
-        return new TodoResponseBody(todo.getId(), todo.getTitle(), todo.getDescription(),
-                todo.getStage().toString(), todo.getUser().getId());
-    }
 
     @Test
     void shouldReturnAllTodos() {

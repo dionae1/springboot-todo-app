@@ -1,5 +1,7 @@
 package com.example.demo.service;
 
+import static com.example.demo.util.UserCreator.*;
+
 import java.util.List;
 
 import org.junit.jupiter.api.Assertions;
@@ -33,25 +35,7 @@ public class UserServiceTest {
     @InjectMocks
     private UserService userService;
 
-    private User createUser() {
-        return new User("William Lemos", "will@mail.com", "1234");
-    }
 
-    private User createSecondaryUser() {
-        return new User("John Doe", "john@mail.com", "5678");
-    }
-
-    private UserResponseBody createUserResponseBody(User user) {
-        return new UserResponseBody(user.getId(), user.getName(), user.getEmail());
-    }
-
-    private UserPostRequestBody createUserPostRequestBody(User user) {
-        return new UserPostRequestBody(user.getName(), user.getEmail(), user.getPassword());
-    }
-
-    private UserPutRequestBody createUserPutRequestBody() {
-        return new UserPutRequestBody("Updated User Name", "updated@email.com");
-    }
 
     @Test
     void shouldReturnAllUsers() {
