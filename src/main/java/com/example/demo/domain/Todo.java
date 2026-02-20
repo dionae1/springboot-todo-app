@@ -31,8 +31,8 @@ public class Todo {
     @Enumerated(EnumType.STRING)
     private TodoStage stage;
 
-    @ManyToOne()
-    @JoinColumn(name = "user_id")
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     public Todo(String title, String description, TodoStage stage) {
