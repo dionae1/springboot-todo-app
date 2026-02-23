@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.demo.dto.PageResponseBody;
 import com.example.demo.dto.TodoResponseBody;
 import com.example.demo.dto.UserPostRequestBody;
 import com.example.demo.dto.UserPutRequestBody;
@@ -31,8 +32,14 @@ public class UserController {
     private final UserService userServices;
 
     @GetMapping()
-    public ResponseEntity<Page<UserResponseBody>> getAllUsers(Pageable pageable) {
-        return ResponseEntity.ok(userServices.list(pageable));
+    public ResponseEntity<PageResponseBody<UserResponseBody>> getAllUsers(Pageable pageable) {
+        Page<UserResponseBody> page = userServices.list(pageable);
+        return ResponseEntity.ok(new PageResponseBody<>(
+                page.getContent(),
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages()));
     }
 
     @GetMapping("/{id}")
@@ -42,7 +49,7 @@ public class UserController {
 
     @PostMapping()
     public ResponseEntity<UserResponseBody> createUser(@Valid @RequestBody UserPostRequestBody user) {
-        return ResponseEntity.created(null).body(userServices.save(user));
+        return ResponseEntity.status(201).body(userServices.save(user));
     }
 
     @PutMapping("/{id}")

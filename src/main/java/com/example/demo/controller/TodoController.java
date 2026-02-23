@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.demo.dto.PageResponseBody;
 import com.example.demo.dto.TodoPostRequestBody;
 import com.example.demo.dto.TodoPutRequestBody;
 import com.example.demo.dto.TodoResponseBody;
@@ -28,8 +29,14 @@ public class TodoController {
     private final TodoService todoServices;
 
     @GetMapping
-    public ResponseEntity<Page<TodoResponseBody>> getAll(Pageable pageable) {
-        return ResponseEntity.ok(todoServices.list(pageable));
+    public ResponseEntity<PageResponseBody<TodoResponseBody>> getAll(Pageable pageable) {
+        Page<TodoResponseBody> page = todoServices.list(pageable);
+        return ResponseEntity.ok(new PageResponseBody<>(
+                page.getContent(),
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages()));
     }
 
     @GetMapping("/{id}")
@@ -39,7 +46,7 @@ public class TodoController {
 
     @PostMapping()
     public ResponseEntity<TodoResponseBody> createTodo(@Valid @RequestBody TodoPostRequestBody todo) {
-        return ResponseEntity.ok(todoServices.save(todo));
+        return ResponseEntity.status(201).body(todoServices.save(todo));
     }
 
     @PutMapping("/{id}")
